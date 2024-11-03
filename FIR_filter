@@ -1,0 +1,26 @@
+import numpy as np
+
+# Define FIR filter parameters
+num_taps = 64  # Number of taps in the FIR filter
+coefficients = np.random.randint(-32768, 32767, num_taps, dtype=np.int16)  # 16-bit coefficients
+
+# Initialize buffer to store previous input samples
+buffer = np.zeros(num_taps, dtype=np.int16)
+
+def fir_filter(input_sample):
+    global buffer
+    
+    # Shift the buffer
+    buffer[1:] = buffer[:-1]
+    buffer[0] = input_sample
+    
+    # Compute the FIR filter output
+    output = np.sum(buffer * coefficients)
+    
+    return output
+
+# Example usage: filtering a sample stream
+input_samples = np.random.randint(-32768, 32767, 10, dtype=np.int16)  # 10 input samples
+outputs = [fir_filter(sample) for sample in input_samples]
+
+outputs  # Display the filter output for each input sample
