@@ -1,0 +1,18 @@
+// Initialize FIR filter parameters
+Define array `coefficients[64]`  // 64 filter coefficients (16-bit each)
+Define array `buffer[64]` with all elements set to 0  // to hold input samples
+
+// FIR filter processing
+For each input sample `x`:
+    Shift elements in `buffer` to the right by 1
+    Set `buffer[0]` to `x`
+    
+    // Initialize output to 0
+    Set `output` to 0
+
+    // Multiply and accumulate
+    For i = 0 to 63:
+        output += buffer[i] * coefficients[i]
+        
+    // Output the result
+    Return `output`
