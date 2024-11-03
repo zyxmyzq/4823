@@ -1,0 +1,41 @@
+    .data
+coefficients: .word 123, -234, 345, ...      ; 64 16-bit coefficients (example values)
+buffer:       .space 128                      ; Space for 64 samples (16 bits each)
+
+    .text
+    .global fir_filter
+
+fir_filter:
+    PUSH {r4-r7, lr}                         ; Save registers
+
+    LDR r2, =buffer                          ; Load address of buffer
+    LDR r3, =coefficients                    ; Load address of coefficients
+    MOV r4, #0                               ; r4 will hold the output
+    MOV r5, #63                              ; Number of taps - 1 (for shifting)
+
+; Shift buffer to the right by 1 to make space for new sample
+shift_loop:
+    LDRH r6, [r2, r5, LSL #1]                ; Load buffer[r5] (16-bit)
+    STRH r6, [r2, r5, LSL #1 + 2]            ; Store buffer[r5] to buffer[r5+1]
+    SUBS r5, r5, #1                          ; Decrement index
+    BGE shift_loop                           ; Repeat until all are shifted
+
+; Store new sample in buffer[0]
+    STRH r0, [r2]                            ; Store input sample in buffer[0]
+
+    MOV r5, #0                               ; Reset index for convolution
+
+; Convolution loop: Multiply and accumulate
+convolution_loop:
+    LDRH r6, [r2, r5, LSL #1]                ; Load buffer[r5]
+    LDRH r7, [r3, r5, LSL #1]                ; Load coefficients[r5]
+    SMULBB r6, r6, r7                        ; Multiply buffer[r5] * coefficients[r5] (16-bit multiplication)
+    ADD r4, r4, r6                           ; Accumulate result in r4
+    ADD r5, r5, #1                           ; Increment index
+    CMP r5, #64                              ; Check if we processed all taps
+    BLT convolution_loop                     ; Repeat if not done
+
+; Output result
+    MOV r1, r4                               ; Move output to r1
+
+    POP {r4-r7, pc}                          ; Restore registers and return
